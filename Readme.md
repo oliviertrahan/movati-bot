@@ -18,3 +18,17 @@ Run `modal run bookClasses.py` to do it on CLI
 To deploy it:
 Run `modal deploy bookClasses.py` to deploy assuming your tokens are setup
 
+
+## Info
+
+### category values
+
+6994 : "CARDIO & STRENGTH"
+6995: "STRENGTH"
+6996: "WELLNESS"
+6997: "AQUA"
+6998: "CARDIO"
+6999: "CYCLE"
+7000: "YOGA"
+7090: "GROUP PERSONAL TRAINING"
+7640: "PERSONAL TRAINING"
