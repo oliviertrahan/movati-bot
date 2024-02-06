@@ -8,14 +8,14 @@ from time import sleep
 import os
 
 import modal
-dockerfile_image = modal.Image.from_dockerfile("Dockerfile")
+dockerfile_image = modal.Image.from_dockerfile("./Dockerfile")
 stub = modal.Stub("movati-bot")
 
 """
 utility classes
 """
 from dataclasses import dataclass
-if stub.is_inside():
+with dockerfile_image.imports():
     import requests
     import dataclass_wizard
     import pytz
@@ -94,15 +94,17 @@ if stub.is_inside():
 
     accounts_to_book = [
         UserClassBookingConfig('Olivier', os.environ.get('OLIVIER_EMAIL'), os.environ.get('OLIVIER_PASSWORD'), [
-            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats (E)', 'Tuesday', time(17, 30), time(23, 59)),
-            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats (E)', 'Thursday', time(17, 30), time(23, 59)),
-            ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity® Fitness 1 (E)', 'Sunday', time(10, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
         ]),
         UserClassBookingConfig('Valerie', os.environ.get('VALERIE_EMAIL'), os.environ.get('VALERIE_PASSWORD'), [
-            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats (E)', 'Tuesday', time(17, 30), time(23, 59)),
-            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats (E)', 'Thursday', time(17, 30), time(23, 59)),
-            ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity® Fitness 1 (E)', 'Sunday', time(10, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
             #ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
         ])
     ]
     start = floor(datetime.now().timestamp()) #start time to get schedule
@@ -307,7 +309,7 @@ if stub.is_inside():
 
                 #For every person in the location, book the class if it is valid for that person
                 for person_name, user_email, user_password, booking_config in user_bookings:
-                    is_valid_class = class_data['name'] in booking_config.class_name
+                    is_valid_class = booking_config.class_name in class_data['name']
                     class_day_of_week = get_valid_day_of_week(class_data['date'])
                     class_time = parse_class_start_time(class_data['time_range'])
                     is_valid_class_time = is_valid_time(class_time, booking_config.start_time, booking_config.end_time)
@@ -358,10 +360,10 @@ if stub.is_inside():
                     print(f"Wanted to book {class_name} at {class_time} on {class_day_of_week} for {person_name}, but it was already done!")
 
 #run every minute
-@stub.function(image=dockerfile_image, schedule=modal.Cron("* * * * *"), secret=modal.Secret.from_name("movati-creds"))
+@stub.function(image=dockerfile_image, schedule=modal.Cron("* * * * *"), secrets=[modal.Secret.from_name("movati-creds")])
 def cronBookClasses():
     book_classes()
 
-@stub.local_entrypoint
+@stub.local_entrypoint()
 def main():
-    cronBookClasses.call()
+    cronBookClasses.remote()
