@@ -89,7 +89,6 @@ with dockerfile_image.imports():
     movati_account_id = 577
     movati_trainyards_location_id = 2308
     movati_trainyards_timezone = pytz.timezone('America/Toronto')
-    print_classes = False
 
     accounts_to_book = [
         UserClassBookingConfig('Olivier', os.environ.get('OLIVIER_EMAIL'), os.environ.get('OLIVIER_PASSWORD'), [
@@ -123,6 +122,13 @@ with dockerfile_image.imports():
     logic
     """
     valid_days_to_book = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    valid_months_to_book = ['January', 'February', 'March', 'April', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+    def get_valid_datetime_month(month_str):
+        for i in range(0, len(valid_months_to_book)):
+            if valid_months_to_book[i] == month_str:
+                return i + 1
+        return None
 
     def handle_incorrect_response(url, response):
         if not response.ok:
@@ -152,9 +158,18 @@ with dockerfile_image.imports():
     def is_valid_time(class_time, time_start, time_end):
         return class_time >= time_start and class_time <= time_end
 
-    def get_valid_day_of_week(date_string):
-        match = re.search(rf'({"|".join(valid_days_to_book)})', date_string)
-        return match.group(1) if match is not None else None
+    def get_valid_date_info(date_string):
+
+        match = re.search(rf'({"|".join(valid_days_to_book)}), ([a-zA-Z]+) (\d+), (\d+)', date_string)
+        if match is None:
+            return None
+        
+        return {
+            "year": int(match.group(4)),
+            "day": int(match.group(3)),
+            "month": get_valid_datetime_month(match.group(2)),
+            "day_of_week": match.group(1),
+        }
 
     def get_class_state(class_details):
         match = re.search(r'textmsg="([^"]+)"', class_details)
@@ -274,7 +289,8 @@ with dockerfile_image.imports():
         return True
 
     def book_classes():
-        print("checking for classes on ", datetime.now(tz=movati_trainyards_timezone))
+        now_time = datetime.now(tz=movati_trainyards_timezone)
+        print("checking for classes on ", now_time)
         for _, (location_id, user_bookings) in enumerate(class_configs_per_location.items()):
             print("checking for location: ", location_id)
             schedule_url = f"https://groupexpro.com/schedule/embed/json_schedule.php?schedule&instructor_id=true&format=jsonp&a={movati_account_id}&location={location_id}&category=6994,6995,6996,6998,6999,7000,13827&studio=&class=&instructor=&start={start}&end={end}"
@@ -298,14 +314,24 @@ with dockerfile_image.imports():
 
             for movati_class_data in schedule['aaData']:
                 class_data = {class_values[key]: value for key, value in enumerate(movati_class_data)}
-                if print_classes:
-                    print(json.dumps(class_data))
 
                 #For every person in the location, book the class if it is valid for that person
                 for person_name, user_email, user_password, booking_config in user_bookings:
                     is_valid_class = booking_config.class_name in class_data['name']
-                    class_day_of_week = get_valid_day_of_week(class_data['date'])
+                    class_day_of_week = None
+                    class_datetime = None
+                    date_info = get_valid_date_info(class_data['date'])
+                    if not date_info:
+                        print('cannot parse date_info. continuing.')
+                        continue
                     class_time = parse_class_start_time(class_data['time_range'])
+                    if not class_time:
+                        print('cannot parse class_time. continuing.')
+                        continue
+
+                    class_day_of_week = date_info['day_of_week']
+                    class_datetime = datetime(date_info['year'], date_info['month'], date_info['day'], class_time.hour, class_time.minute, tzinfo=movati_trainyards_timezone)
+
                     is_valid_class_time = is_valid_time(class_time, booking_config.start_time, booking_config.end_time)
                     class_state, spots_available, can_start_booking_on = get_class_state(class_data['details'])
                     
@@ -324,8 +350,13 @@ with dockerfile_image.imports():
                         if (spots_available > 1):
 
                             #Handle the scneario where we can't book yet
-                            if (can_start_booking_on and datetime.now(tz=movati_trainyards_timezone) < can_start_booking_on):
+                            if (can_start_booking_on and now_time < can_start_booking_on):
                                 print(f"Found valid class for {person_name}: {class_data['name']} on {class_day_of_week} at {class_data['time_range']} which is not yet available to book. Waiting to book until {can_start_booking_on}.")
+                                continue
+
+                            #Handle scenario where the class is too soon, we don't want to book that close
+                            if (now_time + timedelta(hours=3) > class_datetime):
+                                print(f"Found valid class for {person_name}: {class_data['name']} on {class_day_of_week} at {class_data['time_range']} which is available to book but is too soon! Will not book.")
                                 continue
 
                             #get booking URL to book
