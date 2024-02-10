@@ -4,7 +4,6 @@ from math import floor
 from datetime import datetime, timedelta, time
 import json
 import re
-from time import sleep
 import os
 
 import modal
@@ -31,8 +30,8 @@ with dockerfile_image.imports():
     @dataclass
     class UserClassBookingConfig:
         person_name: str
-        account_email: str
-        account_password: str
+        account_email: str | None
+        account_password: str | None
         class_bookings: list[ClassBookingConfig]
 
     class ClassCacheService(object):
@@ -89,8 +88,8 @@ with dockerfile_image.imports():
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
     movati_account_id = 577
     movati_trainyards_location_id = 2308
-
     movati_trainyards_timezone = pytz.timezone('America/Toronto')
+    print_classes = False
 
     accounts_to_book = [
         UserClassBookingConfig('Olivier', os.environ.get('OLIVIER_EMAIL'), os.environ.get('OLIVIER_PASSWORD'), [
@@ -103,7 +102,9 @@ with dockerfile_image.imports():
             # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
             # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
             # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
-            #ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Tuesday', time(18, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
         ])
     ]
@@ -199,15 +200,6 @@ with dockerfile_image.imports():
         response = requests.get(booking_get_url, allow_redirects=False, headers={
             'User-Agent': user_agent, 
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'accept-language': 'en,fr-CA;q=0.9,fr;q=0.8',
-            'accept-encoding': 'gzip, deflate, br',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': 'macOS',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1'
         })
         handle_incorrect_response(booking_get_url, response)
 
@@ -285,7 +277,7 @@ with dockerfile_image.imports():
         print("checking for classes on ", datetime.now(tz=movati_trainyards_timezone))
         for _, (location_id, user_bookings) in enumerate(class_configs_per_location.items()):
             print("checking for location: ", location_id)
-            schedule_url = f"https://groupexpro.com/schedule/embed/json_schedule.php?schedule&instructor_id=true&format=jsonp&a={movati_account_id}&location={location_id}&category=6994,6995,6996,6998,6999,7000&studio=&class=&instructor=&start={start}&end={end}"
+            schedule_url = f"https://groupexpro.com/schedule/embed/json_schedule.php?schedule&instructor_id=true&format=jsonp&a={movati_account_id}&location={location_id}&category=6994,6995,6996,6998,6999,7000,13827&studio=&class=&instructor=&start={start}&end={end}"
 
             response = requests.get(schedule_url, headers={'User-Agent': user_agent, 'Content-Type': 'application/json'}) 
             handle_incorrect_response(schedule_url, response)
@@ -306,6 +298,8 @@ with dockerfile_image.imports():
 
             for movati_class_data in schedule['aaData']:
                 class_data = {class_values[key]: value for key, value in enumerate(movati_class_data)}
+                if print_classes:
+                    print(json.dumps(class_data))
 
                 #For every person in the location, book the class if it is valid for that person
                 for person_name, user_email, user_password, booking_config in user_bookings:
