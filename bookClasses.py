@@ -102,6 +102,7 @@ with dockerfile_image.imports():
             # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
             # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
             # ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Barre Physique', 'Monday', time(18, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Tuesday', time(18, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
@@ -317,7 +318,7 @@ with dockerfile_image.imports():
 
                 #For every person in the location, book the class if it is valid for that person
                 for person_name, user_email, user_password, booking_config in user_bookings:
-                    is_valid_class = booking_config.class_name in class_data['name']
+                    is_valid_class = booking_config.class_name.lower() in class_data['name'].lower()
                     class_day_of_week = None
                     class_datetime = None
                     date_info = get_valid_date_info(class_data['date'])
