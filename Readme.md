@@ -1,22 +1,64 @@
-# Movati Bot
+# Movati Booking Project
 
-The goal of this bot is to book classes on movati. 
-This is deployed on modal: https://modal.com/
+The goal of this project is to autobook classes on movati. 
+The cron scheduler is deployed on modal: https://modal.com/
 
-## Setup
+## Setup - cron scheduler (booking_bot)
 
 `pip install modal-client`
 `modal token new`
 
 Then go on the modal website and setup the credentials under `movati-creds`
 
-## Local testing and deployment
+### Local testing and deployment
+
+`$ cd booking_bot`
 
 For a local run:
 Run `modal run bookClasses.py` to do it on CLI
 
 To deploy it:
 Run `modal deploy bookClasses.py` to deploy assuming your tokens are setup
+
+## Setup - web schedule interface
+
+Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+
+### Setup
+
+Make sure to install the dependencies:
+
+```bash
+# npm
+npm install
+```
+
+### Development Server
+
+Start the development server on `http://localhost:3000`:
+
+```bash
+# npm
+npm run dev
+```
+
+### Production
+
+Build the application for production:
+
+```bash
+# npm
+npm run build
+```
+
+### Locally preview production build:
+
+```bash
+# npm
+npm run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
 
 ## Info
