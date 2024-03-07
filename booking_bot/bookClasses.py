@@ -104,7 +104,7 @@ with dockerfile_image.imports():
             # ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Barre Physique', 'Monday', time(18, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Tuesday', time(18, 00), time(23, 59)),
-            ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
             ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
         ])
     ]
