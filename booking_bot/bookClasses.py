@@ -346,7 +346,7 @@ with dockerfile_image.imports():
                             check_expiration = class_want_to_book.get_expiration(class_dict_key)
                             print(f"Found valid class for {person_name}: {class_data['name']} on {class_day_of_week} at {class_data['time_range']} which we have already tried/succeeded to book, but will only be available on {check_expiration}. Waiting.")
                             continue
-
+                        
                         #TODO: Handle the case where we can't book all users for the same class
                         if (spots_available > 1):
 
@@ -356,7 +356,8 @@ with dockerfile_image.imports():
                                 continue
 
                             #Handle scenario where the class is too soon, we don't want to book that close
-                            if (now_time + timedelta(hours=3) > class_datetime):
+                            print(f"now_time + timedelta(hours=15) : {now_time + timedelta(hours=15) }")
+                            if (now_time + timedelta(hours=15) > class_datetime):
                                 print(f"Found valid class for {person_name}: {class_data['name']} on {class_day_of_week} at {class_data['time_range']} which is available to book but is too soon! Will not book.")
                                 continue
 
