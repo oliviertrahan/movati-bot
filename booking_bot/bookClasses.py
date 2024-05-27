@@ -101,7 +101,7 @@ with dockerfile_image.imports():
                 # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
                 # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
                 # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
-                ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
+                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
             ],
         ),
         UserClassBookingConfig(
@@ -128,7 +128,7 @@ with dockerfile_image.imports():
                     time(23, 59),
                 ),
                 # ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
-                ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
+                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
             ],
         ),
     ]
