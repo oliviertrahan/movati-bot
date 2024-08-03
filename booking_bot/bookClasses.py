@@ -9,7 +9,7 @@ import os
 import modal
 
 dockerfile_image = modal.Image.from_dockerfile("./Dockerfile")
-stub = modal.Stub("movati-bot")
+app = modal.App("movati-bot")
 
 """
 utility classes
@@ -93,44 +93,22 @@ with dockerfile_image.imports():
     movati_trainyards_timezone = pytz.timezone("America/Toronto")
 
     accounts_to_book = [
-        UserClassBookingConfig(
-            "Olivier",
-            os.environ.get("OLIVIER_EMAIL"),
-            os.environ.get("OLIVIER_PASSWORD"),
-            [
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
-            ],
-        ),
-        UserClassBookingConfig(
-            "Valerie",
-            os.environ.get("VALERIE_EMAIL"),
-            os.environ.get("VALERIE_PASSWORD"),
-            [
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
-                ClassBookingConfig(
-                    movati_trainyards_location_id,
-                    "Barre Physique",
-                    "Monday",
-                    time(18, 00),
-                    time(23, 59),
-                ),
-                ClassBookingConfig(
-                    movati_trainyards_location_id,
-                    "Pilates",
-                    "Tuesday",
-                    time(18, 00),
-                    time(23, 59),
-                ),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
-                # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(14, 00)),
-            ],
-        ),
+        UserClassBookingConfig('Olivier', os.environ.get('OLIVIER_EMAIL'), os.environ.get('OLIVIER_PASSWORD'), [
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
+        ]),
+        UserClassBookingConfig('Valerie', os.environ.get('VALERIE_EMAIL'), os.environ.get('VALERIE_PASSWORD'), [
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Tuesday', time(17, 30), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Thursday', time(18, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Anti-Gravity', 'Sunday', time(10, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Bungee Workout™ (E)', 'Sunday', time(10, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Barre Physique', 'Monday', time(18, 00), time(23, 59)),
+            ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Tuesday', time(18, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Pilates', 'Saturday', time(11, 00), time(23, 59)),
+            # ClassBookingConfig(movati_trainyards_location_id, 'Rhythm & Beats', 'Sunday', time(11, 00), time(23, 59)),
+        ])
     ]
     start = floor(datetime.now().timestamp())  # start time to get schedule
     end = floor(
@@ -551,16 +529,11 @@ with dockerfile_image.imports():
                     )
 
 
-# run every minute
-@stub.function(
-    image=dockerfile_image,
-    schedule=modal.Cron("* * * * *"),
-    secrets=[modal.Secret.from_name("movati-creds")],
-)
+#run every minute
+@app.function(image=dockerfile_image, schedule=modal.Cron("* * * * *"), secrets=[modal.Secret.from_name("movati-creds")])
 def cronBookClasses():
     book_classes()
 
-
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def main():
     cronBookClasses.remote()
